@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SQL Parameter Replacer</title>
+  <style>
+    :root {
+      --primary-color: #4a6da7;
+      --secondary-color: #2980b9;
+      --success-color: #2ecc71;
+      --error-color: #e74c3c;
+      --bg-color: #f9f9f9;
+      --text-color: #333;
+      --border-color: #ddd;
+      --result-bg: #f5f5f5;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      font-size: 62.5%;
+    }
+
+    body {
+      font-family: 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      font-size: 1.6rem;
+      line-height: 1.6;
+      color: var(--text-color);
+      background-color: var(--bg-color);
+      max-width: 90rem;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+      background-color: white;
+      padding: 2.5rem;
+      border-radius: 0.8rem;
+      box-shadow: 0 0.2rem 1rem rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      color: var(--primary-color);
+      font-size: 2.8rem;
+      margin-bottom: 1rem;
+      text-align: center;
+      border-bottom: 0.2rem solid var(--primary-color);
+      padding-bottom: 1rem;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+    }
+
+    label {
+      font-weight: 600;
+      font-size: 1.6rem;
+      color: var(--primary-color);
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 12rem;
+      padding: 1.2rem;
+      border: 0.1rem solid var(--border-color);
+      border-radius: 0.6rem;
+      font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+      font-size: 1.4rem;
+      resize: vertical;
+      transition: border 0.3s ease;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0.5rem rgba(52, 152, 219, 0.3);
+    }
+
+    .button-group {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+    }
+
+    button {
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 1.2rem 2rem;
+      text-align: center;
+      font-size: 1.6rem;
+      font-weight: 600;
+      cursor: pointer;
+      border-radius: 0.4rem;
+      transition: background-color 0.3s ease, transform 0.1s ease;
+      min-width: 15rem;
+    }
+
+    button:hover {
+      background-color: var(--secondary-color);
+    }
+
+    button:active {
+      transform: scale(0.98);
+    }
+
+    button.copy-btn {
+      background-color: var(--success-color);
+    }
+
+    button.clear-btn {
+      background-color: #95a5a6;
+    }
+
+    .result-container {
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+    }
+
+    .result {
+      background-color: var(--result-bg);
+      padding: 1.5rem;
+      border-radius: 0.6rem;
+      white-space: pre-wrap;
+      font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+      font-size: 1.4rem;
+      border-left: 0.4rem solid var(--primary-color);
+      overflow-x: auto;
+      min-height: 10rem;
+      text-transform: uppercase;
+    }
+
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .checkbox-group input {
+      width: 1.8rem;
+      height: 1.8rem;
+      cursor: pointer;
+    }
+
+    .error-message {
+      color: var(--error-color);
+      font-size: 1.4rem;
+      margin-top: 0.5rem;
+    }
+
+    .success-message {
+      color: var(--success-color);
+      font-size: 1.4rem;
+      margin-top: 0.5rem;
+      text-align: center;
+    }
+
+    .keyword {
+      color: blue;
+      font-weight: bold;
+    }
+
+    .string {
+      color: green;
+    }
+
+    .function {
+      color: purple;
+    }
+
+    .number {
+      color: darkorange;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 1rem;
+      }
+
+      .container {
+        padding: 1.5rem;
+      }
+
+      h1 {
+        font-size: 2.4rem;
+      }
+
+      button {
+        padding: 1rem 1.5rem;
+        font-size: 1.4rem;
+        min-width: 12rem;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>SQL Parameter Replacer</h1>
+
+  <div class="input-group">
+    <label for="sqlQuery">Câu SQL (với dấu ? đại diện cho tham số):</label>
+    <textarea id="sqlQuery" placeholder="Ví dụ: SELECT * FROM users WHERE username = ? AND created_at > ? AND status = ?" rows="10"></textarea>
+  </div>
+
+  <div class="input-group">
+    <label for="params">Tham số (ngăn cách bởi dấu phẩy, định dạng: name(Type)):</label>
+    <textarea id="params" placeholder="Ví dụ: username(String), start_date(Date), status(Int)"></textarea>
+    <div class="checkbox-group">
+      <input type="checkbox" id="formatSql" checked>
+      <label for="formatSql">Định dạng SQL</label>
+    </div>
+  </div>
+
+  <div class="button-group">
+    <button onclick="replaceParams()">Chuyển đổi</button>
+    <button onclick="copyToClipboard()" class="copy-btn">Sao chép</button>
+    <button onclick="clearAll()" class="clear-btn">Xóa tất cả</button>
+  </div>
+
+  <div class="result-container">
+    <label for="result">Kết quả:</label>
+    <div id="result" class="result"></div>
+    <div id="message" class="success-message"></div>
+  </div>
+</div>
+
+<script>
+  function replaceParams() {
+    // Lấy câu SQL và danh sách tham số
+    const sqlQuery = document.getElementById('sqlQuery').value;
+    const paramsText = document.getElementById('params').value;
+    const resultElement = document.getElementById('result');
+    const messageElement = document.getElementById('message');
+    const shouldFormat = document.getElementById('formatSql').checked;
+
+    // Xóa thông báo cũ
+    messageElement.textContent = '';
+
+    if (!sqlQuery || !paramsText) {
+      resultElement.innerHTML = "<span class='error-message'>Vui lòng nhập cả câu SQL và danh sách tham số.</span>";
+      return;
+    }
+
+    // Phân tích danh sách tham số (ngăn cách bởi dấu phẩy)
+    const paramItems = paramsText.split(',').filter(item => item.trim());
+    const params = [];
+
+    for (const item of paramItems) {
+      const match = item.match(/(.+)\((.+)\)/);
+      if (match) {
+        const name = match[1].trim();
+        const type = match[2].trim();
+        params.push({ name, type });
+      }
+    }
+
+    // Đếm số lượng dấu "?" trong câu SQL
+    const questionMarkCount = (sqlQuery.match(/\?/g) || []).length;
+
+    // Kiểm tra số lượng tham số
+    if (questionMarkCount !== params.length) {
+      resultElement.innerHTML = `<span class='error-message'>Lỗi: Số lượng dấu "?" (${questionMarkCount}) không khớp với số lượng tham số (${params.length}).</span>`;
+      return;
+    }
+
+    // Thay thế các dấu "?" bằng tham số tương ứng
+    let modifiedQuery = sqlQuery;
+    let paramIndex = 0;
+
+    modifiedQuery = modifiedQuery.replace(/\?/g, function() {
+      const param = params[paramIndex];
+      const formattedParam = formatParamByType(param.name, param.type);
+      paramIndex++;
+      return formattedParam;
+    });
+
+    // Định dạng SQL nếu được chọn
+    if (shouldFormat) {
+      modifiedQuery = formatSQL(modifiedQuery);
+    }
+
+    // Hiển thị kết quả với định dạng màu
+    resultElement.innerHTML = highlightSQL(modifiedQuery);
+  }
+
+  function formatParamByType(name, type) {
+    switch (type.toLowerCase()) {
+      case 'string':
+        return `'${name}'`;
+      case 'date':
+        return `TO_DATE('${name}', 'YYYY-MM-DD')`;
+      case 'datetime':
+        return `TO_TIMESTAMP('${name}', 'YYYY-MM-DD HH24:MI:SS')`;
+      case 'int':
+      case 'integer':
+      case 'number':
+      case 'float':
+      case 'double':
+        return name;
+      default:
+        return name;
+    }
+  }
+
+  function formatSQL(sql) {
+    // Loại bỏ khoảng trắng thừa
+    sql = sql.trim().replace(/\s+/g, ' ');
+
+    // Các từ khóa SQL chính
+    const keywords = [
+      'SELECT', 'FROM', 'WHERE', 'JOIN', 'LEFT JOIN', 'RIGHT JOIN', 'INNER JOIN',
+      'OUTER JOIN', 'ON', 'GROUP BY', 'ORDER BY', 'HAVING', 'LIMIT', 'OFFSET',
+      'UNION', 'UNION ALL', 'INTERSECT', 'EXCEPT', 'INSERT INTO', 'VALUES',
+      'UPDATE', 'SET', 'DELETE FROM', 'CREATE TABLE', 'ALTER TABLE', 'DROP TABLE',
+      'AND', 'OR', 'NOT', 'IN', 'BETWEEN', 'LIKE', 'IS NULL', 'IS NOT NULL'
+    ];
+
+    // Chuyển từ khóa thành chữ hoa
+    for (const keyword of keywords) {
+      const regex = new RegExp('\\b' + keyword + '\\b', 'gi');
+      sql = sql.replace(regex, keyword);
+    }
+
+    // Thêm xuống dòng
+    sql = sql
+            .replace(/\bSELECT\b/gi, '\nSELECT')
+            .replace(/\bFROM\b/gi, '\nFROM')
+            .replace(/\bWHERE\b/gi, '\nWHERE')
+            .replace(/\bAND\b/gi, '\n  AND')
+            .replace(/\bOR\b/gi, '\n  OR')
+            .replace(/\bGROUP BY\b/gi, '\nGROUP BY')
+            .replace(/\bHAVING\b/gi, '\nHAVING')
+            .replace(/\bORDER BY\b/gi, '\nORDER BY')
+            .replace(/\bLIMIT\b/gi, '\nLIMIT')
+            .replace(/\bOFFSET\b/gi, '\nOFFSET')
+            .replace(/\bJOIN\b|\bLEFT JOIN\b|\bRIGHT JOIN\b|\bINNER JOIN\b|\bOUTER JOIN\b/gi, '\n  $&');
+
+    // Thêm thụt đầu dòng sau WHERE
+    const lines = sql.split('\n');
+    let result = '';
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line) continue;
+
+      result += line + '\n';
+    }
+
+    return result.trim();
+  }
+
+  function highlightSQL(sql) {
+    // Danh sách từ khóa SQL
+    const keywords = [
+      'SELECT', 'FROM', 'WHERE', 'JOIN', 'LEFT', 'RIGHT', 'INNER', 'OUTER',
+      'ON', 'GROUP BY', 'ORDER BY', 'HAVING', 'LIMIT', 'OFFSET', 'UNION',
+      'INTERSECT', 'EXCEPT', 'INSERT', 'INTO', 'VALUES', 'UPDATE', 'SET',
+      'DELETE', 'CREATE', 'ALTER', 'DROP', 'TABLE', 'VIEW', 'INDEX', 'AND',
+      'OR', 'NOT', 'IN', 'BETWEEN', 'LIKE', 'IS', 'NULL', 'AS', 'DISTINCT',
+      'CASE', 'WHEN', 'THEN', 'ELSE', 'END', 'ASC', 'DESC'
+    ];
+
+    // Danh sách hàm SQL
+    const functions = [
+      'TO_DATE', 'TO_CHAR', 'TO_NUMBER', 'SUBSTR', 'SUBSTRING', 'UPPER', 'LOWER',
+      'INITCAP', 'LENGTH', 'ROUND', 'TRUNC', 'DECODE', 'NVL', 'COALESCE', 'SUM',
+      'AVG', 'MIN', 'MAX', 'COUNT', 'EXTRACT', 'CAST', 'CONVERT', 'DATE_TRUNC',
+      'TO_TIMESTAMP'
+    ];
+
+    // Pattern cho chuỗi ký tự (nằm trong dấu nháy đơn)
+    const stringPattern = /'[^']*'/g;
+
+    // Pattern cho số
+    const numberPattern = /\b\d+(\.\d+)?\b/g;
+
+    // Highlight chuỗi ký tự
+    sql = sql.replace(stringPattern, match => `<span class="string">${match}</span>`);
+
+    // Highlight số
+    sql = sql.replace(numberPattern, match => `<span class="number">${match}</span>`);
+
+    // Highlight từ khóa SQL
+    for (const keyword of keywords) {
+      const regex = new RegExp(`\\b${keyword}\\b`, 'gi');
+      sql = sql.replace(regex, match => `<span class="keyword">${match}</span>`);
+    }
+
+    // Highlight hàm SQL
+    for (const func of functions) {
+      const regex = new RegExp(`\\b${func}\\b`, 'gi');
+      sql = sql.replace(regex, match => `<span class="function">${match}</span>`);
+    }
+
+    // Thay thế dấu xuống dòng bằng thẻ <br>
+    return sql.replace(/\n/g, '<br>');
+  }
+
+  function copyToClipboard() {
+    const resultElement = document.getElementById('result');
+    const messageElement = document.getElementById('message');
+
+    // Tạo một phần tử tạm thời để lấy text (không bao gồm định dạng HTML)
+    const tempElement = document.createElement('div');
+    tempElement.innerHTML = resultElement.innerHTML;
+    const textToCopy = tempElement.textContent || tempElement.innerText || '';
+
+    if (!textToCopy.trim()) {
+      messageElement.textContent = 'Không có nội dung để sao chép!';
+      return;
+    }
+
+    // Sử dụng Clipboard API
+    navigator.clipboard.writeText(textToCopy)
+            .then(() => {
+              messageElement.textContent = 'Đã sao chép vào clipboard!';
+              setTimeout(() => {
+                messageElement.textContent = '';
+              }, 3000);
+            })
+            .catch(err => {
+              messageElement.textContent = 'Không thể sao chép: ' + err;
+            });
+  }
+
+  function clearAll() {
+    document.getElementById('sqlQuery').value = '';
+    document.getElementById('params').value = '';
+    document.getElementById('result').innerHTML = '';
+    document.getElementById('message').textContent = '';
+  }
+
+  // Tự động lưu nội dung vào localStorage
+  window.onload = function() {
+    // Khôi phục nội dung từ localStorage
+    document.getElementById('sqlQuery').value = localStorage.getItem('sqlQuery') || '';
+    document.getElementById('params').value = localStorage.getItem('params') || '';
+
+    // Lưu nội dung khi có thay đổi
+    document.getElementById('sqlQuery').addEventListener('input', function() {
+      localStorage.setItem('sqlQuery', this.value);
+    });
+
+    document.getElementById('params').addEventListener('input', function() {
+      localStorage.setItem('params', this.value);
+    });
+
+    // Phát hiện phím tắt Ctrl+Enter để chuyển đổi
+    document.addEventListener('keydown', function(e) {
+      if (e.ctrlKey && e.key === 'Enter') {
+        replaceParams();
+      }
+    });
+  };
+</script>
+</body>
+</html>
