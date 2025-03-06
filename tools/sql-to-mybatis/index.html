@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Oracle to MyBatis Converter</title>
+  <style>
+    :root {
+      --primary-color: #4a6da7;
+      --secondary-color: #2980b9;
+      --success-color: #2ecc71;
+      --error-color: #e74c3c;
+      --bg-color: #f9f9f9;
+      --text-color: #333;
+      --border-color: #ddd;
+      --result-bg: #f5f5f5;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      font-size: 62.5%;
+    }
+
+    body {
+      font-family: 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      font-size: 1.6rem;
+      line-height: 1.6;
+      color: var(--text-color);
+      background-color: var(--bg-color);
+      max-width: 90rem;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+      background-color: white;
+      padding: 2.5rem;
+      border-radius: 0.8rem;
+      box-shadow: 0 0.2rem 1rem rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      color: var(--primary-color);
+      font-size: 2.8rem;
+      margin-bottom: 1rem;
+      text-align: center;
+      border-bottom: 0.2rem solid var(--primary-color);
+      padding-bottom: 1rem;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+    }
+
+    label {
+      font-weight: 600;
+      font-size: 1.6rem;
+      color: var(--primary-color);
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 12rem;
+      padding: 1.2rem;
+      border: 0.1rem solid var(--border-color);
+      border-radius: 0.6rem;
+      font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+      font-size: 1.4rem;
+      resize: vertical;
+      transition: border 0.3s ease;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0.5rem rgba(52, 152, 219, 0.3);
+    }
+
+    .button-group {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+    }
+
+    button {
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 1.2rem 2rem;
+      text-align: center;
+      font-size: 1.6rem;
+      font-weight: 600;
+      cursor: pointer;
+      border-radius: 0.4rem;
+      transition: background-color 0.3s ease, transform 0.1s ease;
+      min-width: 15rem;
+    }
+
+    button:hover {
+      background-color: var(--secondary-color);
+    }
+
+    button:active {
+      transform: scale(0.98);
+    }
+
+    button.copy-btn {
+      background-color: var(--success-color);
+    }
+
+    button.clear-btn {
+      background-color: #95a5a6;
+    }
+
+    .result-container {
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+    }
+
+    .result {
+      background-color: var(--result-bg);
+      padding: 1.5rem;
+      border-radius: 0.6rem;
+      white-space: pre-wrap;
+      font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+      font-size: 1.4rem;
+      border-left: 0.4rem solid var(--primary-color);
+      overflow-x: auto;
+      min-height: 10rem;
+    }
+
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .checkbox-group input {
+      width: 1.8rem;
+      height: 1.8rem;
+      cursor: pointer;
+    }
+
+    .error-message {
+      color: var(--error-color);
+      font-size: 1.4rem;
+      margin-top: 0.5rem;
+    }
+
+    .success-message {
+      color: var(--success-color);
+      font-size: 1.4rem;
+      margin-top: 0.5rem;
+      text-align: center;
+    }
+
+    #paramsTable {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+
+    #paramsTable th, #paramsTable td {
+      padding: 1rem;
+      text-align: left;
+      border: 1px solid var(--border-color);
+    }
+
+    #paramsTable th {
+      background-color: #f5f5f5;
+      font-weight: 600;
+      color: var(--primary-color);
+    }
+
+    #paramsTable select {
+      width: 100%;
+      padding: 0.5rem;
+      border-radius: 0.4rem;
+      border: 1px solid var(--border-color);
+      font-size: 1.4rem;
+    }
+
+    .param-name {
+      font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+      font-weight: 600;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 1rem;
+      }
+
+      .container {
+        padding: 1.5rem;
+      }
+
+      h1 {
+        font-size: 2.4rem;
+      }
+
+      button {
+        padding: 1rem 1.5rem;
+        font-size: 1.4rem;
+        min-width: 12rem;
+      }
+
+      #paramsTable th, #paramsTable td {
+        padding: 0.8rem;
+        font-size: 1.4rem;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Oracle to MyBatis Converter</h1>
+
+  <div class="input-group">
+    <label for="oracleSql">Câu SQL Oracle (với tham số dạng :P_XXX):</label>
+    <textarea id="oracleSql" placeholder="Ví dụ: SELECT * FROM users WHERE username = :P_USERNAME AND status = :P_STATUS" rows="10"></textarea>
+    <button onclick="extractParams()" style="align-self: flex-start; margin-top: 0.8rem;">Trích xuất tham số</button>
+  </div>
+
+  <div id="paramsContainer" class="input-group" style="display: none;">
+    <label>Tùy chỉnh kiểu dữ liệu cho từng tham số:</label>
+    <table id="paramsTable">
+      <thead>
+      <tr>
+        <th>Tham số</th>
+        <th>jdbcType</th>
+      </tr>
+      </thead>
+      <tbody id="paramsTableBody">
+      <!-- Sẽ được thêm bằng JavaScript -->
+      </tbody>
+    </table>
+  </div>
+
+  <div class="input-group">
+    <div class="checkbox-group">
+      <input type="checkbox" id="keepPrefix" checked>
+      <label for="keepPrefix">Giữ nguyên tiền tố P_</label>
+    </div>
+    <div class="checkbox-group">
+      <input type="checkbox" id="upperCaseSql" checked>
+      <label for="upperCaseSql">UPPERCASE SQL (trừ tham số)</label>
+    </div>
+  </div>
+
+  <div class="button-group">
+    <button onclick="convertToMybatis()">Chuyển đổi</button>
+    <button onclick="copyToClipboard()" class="copy-btn">Sao chép</button>
+    <button onclick="clearAll()" class="clear-btn">Xóa tất cả</button>
+  </div>
+
+  <div class="result-container">
+    <label for="result">Kết quả:</label>
+    <pre id="result" class="result"></pre>
+    <div id="message" class="success-message"></div>
+  </div>
+</div>
+
+<script>
+  // Biến lưu trữ tham số để dùng khi chuyển đổi
+  let extractedParams = [];
+
+  function extractParams() {
+    const oracleSql = document.getElementById('oracleSql').value;
+    const resultElement = document.getElementById('result');
+    const messageElement = document.getElementById('message');
+    const paramsContainer = document.getElementById('paramsContainer');
+    const paramsTableBody = document.getElementById('paramsTableBody');
+
+    messageElement.textContent = '';
+    resultElement.textContent = '';
+
+    if (!oracleSql) {
+      resultElement.textContent = "Vui lòng nhập câu SQL Oracle.";
+      return;
+    }
+
+    // Tìm tất cả các tham số Oracle theo định dạng :P_XXX
+    const oracleParamRegex = /:(P_[A-Z0-9_]+)/g;
+    const matches = [...oracleSql.matchAll(oracleParamRegex)];
+
+    if (matches.length === 0) {
+      resultElement.textContent = "Không tìm thấy tham số Oracle nào trong định dạng :P_XXX.";
+      return;
+    }
+
+    // Khởi tạo lại mảng lưu trữ tham số
+    extractedParams = [];
+
+    // Tạo bảng các tham số duy nhất
+    const uniqueParams = new Set();
+    for (const match of matches) {
+      uniqueParams.add(match[1]); // Chỉ phần tham số (không có dấu :)
+    }
+
+    // Xóa hết các hàng cũ
+    paramsTableBody.innerHTML = '';
+
+    // Tạo các hàng mới cho bảng tham số
+    uniqueParams.forEach(param => {
+      const paramObj = { name: param, jdbcType: 'VARCHAR' };
+      extractedParams.push(paramObj);
+
+      const row = document.createElement('tr');
+
+      const paramCell = document.createElement('td');
+      paramCell.innerHTML = `<span class="param-name">:${param}</span>`;
+
+      const typeCell = document.createElement('td');
+      const select = document.createElement('select');
+      select.dataset.param = param; // Lưu tên tham số vào thuộc tính data
+
+      // Các loại jdbcType phổ biến
+      const jdbcTypes = [
+        'VARCHAR', 'CHAR', 'NUMERIC', 'DECIMAL', 'INTEGER', 'BIGINT',
+        'FLOAT', 'DOUBLE', 'DATE', 'TIME', 'TIMESTAMP', 'BOOLEAN',
+        'CLOB', 'BLOB', 'ARRAY', 'OTHER'
+      ];
+
+      jdbcTypes.forEach(type => {
+        const option = document.createElement('option');
+        option.value = type;
+        option.textContent = type;
+        select.appendChild(option);
+      });
+
+      // Bắt sự kiện thay đổi jdbcType
+      select.addEventListener('change', function() {
+        const paramName = this.dataset.param;
+        const paramObj = extractedParams.find(p => p.name === paramName);
+        if (paramObj) {
+          paramObj.jdbcType = this.value;
+        }
+      });
+
+      typeCell.appendChild(select);
+
+      row.appendChild(paramCell);
+      row.appendChild(typeCell);
+      paramsTableBody.appendChild(row);
+    });
+
+    // Hiển thị bảng tham số
+    paramsContainer.style.display = 'block';
+  }
+
+  function convertToMybatis() {
+    const oracleSql = document.getElementById('oracleSql').value;
+    const resultElement = document.getElementById('result');
+    const messageElement = document.getElementById('message');
+    const keepPrefix = document.getElementById('keepPrefix').checked;
+    const upperCaseSql = document.getElementById('upperCaseSql').checked;
+
+    messageElement.textContent = '';
+
+    if (!oracleSql) {
+      resultElement.textContent = "Vui lòng nhập câu SQL Oracle.";
+      return;
+    }
+
+    if (extractedParams.length === 0) {
+      // Nếu chưa trích xuất tham số, tự động trích xuất
+      extractParams();
+      if (extractedParams.length === 0) {
+        return; // Nếu vẫn không có tham số, thoát
+      }
+    }
+
+    // Tạo một mảng chứa thông tin về vị trí và nội dung của tham số trong SQL
+    const paramPlaceholders = [];
+    const oracleParamRegex = /:(P_[A-Z0-9_]+)/g;
+    let match;
+    while ((match = oracleParamRegex.exec(oracleSql)) !== null) {
+      paramPlaceholders.push({
+        start: match.index,
+        end: match.index + match[0].length,
+        oracleParam: match[0],
+        paramName: match[1]
+      });
+    }
+
+    // Sắp xếp theo vị trí (từ cuối lên đầu để tránh ảnh hưởng các chỉ số khi thay thế)
+    paramPlaceholders.sort((a, b) => b.start - a.start);
+
+    // Tạo bản sao chuỗi SQL để thay đổi
+    let mybatisSql = oracleSql;
+
+    // Thay thế các tham số bằng MyBatis params
+    for (const placeholder of paramPlaceholders) {
+      const paramObj = extractedParams.find(p => p.name === placeholder.paramName);
+      if (!paramObj) continue;
+
+      // Xử lý tên tham số theo định dạng "p_XXX" (p viết thường, phần còn lại giữ nguyên)
+      let mybatisParam = paramObj.name;
+
+      // Giữ/bỏ tiền tố P_
+      if (keepPrefix) {
+        // Đảm bảo p đầu tiên là chữ thường
+        mybatisParam = 'p' + mybatisParam.substring(1);
+      } else {
+        // Bỏ tiền tố P_ và chuyển ký tự đầu tiên thành chữ thường
+        mybatisParam = mybatisParam.replace(/^P_/, '');
+        mybatisParam = mybatisParam.charAt(0).toLowerCase() + mybatisParam.substring(1);
+      }
+
+      // Thay thế tham số
+      const mybatisPlaceholder = `#{${mybatisParam}, jdbcType=${paramObj.jdbcType}}`;
+      mybatisSql =
+              mybatisSql.substring(0, placeholder.start) +
+              mybatisPlaceholder +
+              mybatisSql.substring(placeholder.end);
+    }
+
+    // Chuyển đổi ký tự đặc biệt
+    mybatisSql = convertSpecialCharacters(mybatisSql);
+
+    // UPPERCASE SQL (nếu được chọn)
+    if (upperCaseSql) {
+      mybatisSql = upperCaseSqlExceptParams(mybatisSql);
+    }
+
+    // Hiển thị kết quả
+    resultElement.textContent = mybatisSql;
+  }
+
+  // Chuyển đổi ký tự đặc biệt sang entity HTML
+  function convertSpecialCharacters(sql) {
+    // Phân tích câu SQL để tìm các tham số MyBatis
+    const mybatisParamRegex = /#{[^}]*}/g;
+    const matches = [...sql.matchAll(mybatisParamRegex)];
+
+    // Tạo một mảng chứa thông tin về vị trí và nội dung của tham số MyBatis
+    const paramPositions = [];
+    for (const match of matches) {
+      paramPositions.push({
+        start: match.index,
+        end: match.index + match[0].length,
+        content: match[0]
+      });
+    }
+
+    // Sắp xếp theo vị trí (từ cuối lên đầu)
+    paramPositions.sort((a, b) => b.start - a.start);
+
+    // Chuyển đổi từng phần không phải tham số
+    let result = sql;
+    let lastEnd = sql.length;
+
+    // Thay thế theo đoạn, từng đoạn giữa các tham số
+    for (const param of paramPositions) {
+      // Đoạn văn bản từ cuối tham số này đến đầu tham số trước
+      const segment = sql.substring(param.end, lastEnd);
+
+      // Thay thế ký tự đặc biệt trong đoạn, bắt đầu với phép so sánh nhiều ký tự
+      let convertedSegment = segment
+              .replace(/<>/g, '&lt;&gt;')
+              .replace(/<=/g, '&lt;=')
+              .replace(/>=/g, '&gt;=')
+              .replace(/</g, '&lt;')
+              .replace(/>/g, '&gt;')
+              .replace(/'/g, '&apos;')
+              .replace(/&(?!lt;|gt;|apos;|amp;|quot;)/g, '&amp;');
+
+      // Cập nhật kết quả
+      result =
+              result.substring(0, param.end) +
+              convertedSegment +
+              result.substring(lastEnd);
+
+      lastEnd = param.start;
+    }
+
+    // Xử lý đoạn đầu tiên (từ đầu đến tham số đầu tiên)
+    if (lastEnd > 0) {
+      const firstSegment = sql.substring(0, lastEnd);
+
+      // Thay thế ký tự đặc biệt trong đoạn đầu, bắt đầu với phép so sánh nhiều ký tự
+      let convertedFirstSegment = firstSegment
+              .replace(/<>/g, '&lt;&gt;')
+              .replace(/<=/g, '&lt;=')
+              .replace(/>=/g, '&gt;=')
+              .replace(/</g, '&lt;')
+              .replace(/>/g, '&gt;')
+              .replace(/'/g, '&apos;')
+              .replace(/&(?!lt;|gt;|apos;|amp;|quot;)/g, '&amp;');
+
+      result = convertedFirstSegment + result.substring(lastEnd);
+    }
+
+    return result;
+  }
+
+  // UPPERCASE SQL nhưng giữ nguyên nội dung trong tham số #{...} và giữ entity HTML viết thường
+  function upperCaseSqlExceptParams(sql) {
+    // Phân tích câu SQL để tìm các tham số MyBatis và entity HTML
+    const mybatisParamRegex = /#{[^}]*}|&lt;|&gt;|&apos;|&amp;|&quot;|&lt;&gt;|&lt;=|&gt;=/g;
+    const matches = [...sql.matchAll(mybatisParamRegex)];
+
+    // Tạo một mảng chứa thông tin về vị trí và nội dung của tham số MyBatis và entity HTML
+    const specialParts = [];
+    for (const match of matches) {
+      specialParts.push({
+        start: match.index,
+        end: match.index + match[0].length,
+        content: match[0]
+      });
+    }
+
+    // Sắp xếp theo vị trí (từ cuối lên đầu)
+    specialParts.sort((a, b) => b.start - a.start);
+
+    // Chuyển đổi từng phần không phải tham số hoặc entity HTML
+    let result = sql;
+    let lastEnd = sql.length;
+
+    // Thay thế theo đoạn
+    for (const part of specialParts) {
+      // Đoạn văn bản từ cuối phần đặc biệt này đến đầu phần đặc biệt trước
+      const segment = sql.substring(part.end, lastEnd);
+      // Chuyển đoạn này thành chữ hoa
+      const upperSegment = segment.toUpperCase();
+
+      // Cập nhật kết quả
+      result =
+              result.substring(0, part.end) +
+              upperSegment +
+              result.substring(lastEnd);
+
+      lastEnd = part.start;
+    }
+
+    // Xử lý đoạn đầu tiên (từ đầu đến phần đặc biệt đầu tiên)
+    if (lastEnd > 0) {
+      const firstSegment = sql.substring(0, lastEnd);
+      const upperFirstSegment = firstSegment.toUpperCase();
+
+      result = upperFirstSegment + result.substring(lastEnd);
+    }
+
+    return result;
+  }
+
+  function copyToClipboard() {
+    const resultElement = document.getElementById('result');
+    const messageElement = document.getElementById('message');
+    const textToCopy = resultElement.textContent;
+
+    if (!textToCopy.trim()) {
+      messageElement.textContent = 'Không có nội dung để sao chép!';
+      return;
+    }
+
+    // Sử dụng Clipboard API
+    navigator.clipboard.writeText(textToCopy)
+            .then(() => {
+              messageElement.textContent = 'Đã sao chép vào clipboard!';
+              setTimeout(() => {
+                messageElement.textContent = '';
+              }, 3000);
+            })
+            .catch(err => {
+              messageElement.textContent = 'Không thể sao chép: ' + err;
+            });
+  }
+
+  function clearAll() {
+    document.getElementById('oracleSql').value = '';
+    document.getElementById('result').textContent = '';
+    document.getElementById('message').textContent = '';
+    document.getElementById('paramsContainer').style.display = 'none';
+    document.getElementById('paramsTableBody').innerHTML = '';
+    extractedParams = [];
+  }
+
+  // Tự động lưu nội dung vào localStorage
+  window.onload = function() {
+    // Khôi phục nội dung từ localStorage
+    document.getElementById('oracleSql').value = localStorage.getItem('oracleSql') || '';
+
+    // Lưu nội dung khi có thay đổi
+    document.getElementById('oracleSql').addEventListener('input', function() {
+      localStorage.setItem('oracleSql', this.value);
+    });
+
+    // Phát hiện phím tắt Ctrl+Enter để chuyển đổi
+    document.addEventListener('keydown', function(e) {
+      if (e.ctrlKey && e.key === 'Enter') {
+        if (extractedParams.length === 0) {
+          extractParams();
+        } else {
+          convertToMybatis();
+        }
+      }
+    });
+  };
+</script>
+</body>
+</html>

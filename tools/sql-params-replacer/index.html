@@ -238,14 +238,12 @@
 
 <script>
   function replaceParams() {
-    // Lấy câu SQL và danh sách tham số
     const sqlQuery = document.getElementById('sqlQuery').value;
     const paramsText = document.getElementById('params').value;
     const resultElement = document.getElementById('result');
     const messageElement = document.getElementById('message');
     const shouldFormat = document.getElementById('formatSql').checked;
 
-    // Xóa thông báo cũ
     messageElement.textContent = '';
 
     if (!sqlQuery || !paramsText) {
@@ -253,8 +251,7 @@
       return;
     }
 
-    // Phân tích danh sách tham số (ngăn cách bởi dấu phẩy)
-    const paramItems = paramsText.split(',').filter(item => item.trim());
+    const paramItems = paramsText.split(', ').filter(item => item.trim());
     const params = [];
 
     for (const item of paramItems) {
@@ -266,16 +263,13 @@
       }
     }
 
-    // Đếm số lượng dấu "?" trong câu SQL
     const questionMarkCount = (sqlQuery.match(/\?/g) || []).length;
 
-    // Kiểm tra số lượng tham số
     if (questionMarkCount !== params.length) {
       resultElement.innerHTML = `<span class='error-message'>Lỗi: Số lượng dấu "?" (${questionMarkCount}) không khớp với số lượng tham số (${params.length}).</span>`;
       return;
     }
-
-    // Thay thế các dấu "?" bằng tham số tương ứng
+    
     let modifiedQuery = sqlQuery;
     let paramIndex = 0;
 
