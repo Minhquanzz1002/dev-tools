@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Java Validator Generator</title>
+  <style>
+    :root {
+      --primary-color: #4a6da7;
+      --secondary-color: #2980b9;
+      --success-color: #2ecc71;
+      --error-color: #e74c3c;
+      --bg-color: #f9f9f9;
+      --text-color: #333;
+      --border-color: #ddd;
+      --result-bg: #f5f5f5;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      font-size: 62.5%;
+    }
+
+    body {
+      font-family: 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      font-size: 1.6rem;
+      line-height: 1.6;
+      color: var(--text-color);
+      background-color: var(--bg-color);
+      max-width: 120rem;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+      background-color: white;
+      padding: 2.5rem;
+      border-radius: 0.8rem;
+      box-shadow: 0 0.2rem 1rem rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      color: var(--primary-color);
+      font-size: 2.8rem;
+      margin-bottom: 1rem;
+      text-align: center;
+      border-bottom: 0.2rem solid var(--primary-color);
+      padding-bottom: 1rem;
+    }
+
+    .input-output-container {
+      display: flex;
+      gap: 2rem;
+    }
+
+    .input-group, .output-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+      flex: 1;
+    }
+
+    label {
+      font-weight: 600;
+      font-size: 1.6rem;
+      color: var(--primary-color);
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 30rem;
+      padding: 1.2rem;
+      border: 0.1rem solid var(--border-color);
+      border-radius: 0.6rem;
+      font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+      font-size: 1.4rem;
+      resize: vertical;
+      transition: border 0.3s ease;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0.5rem rgba(52, 152, 219, 0.3);
+    }
+
+    .button-group {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      margin: 1.5rem 0;
+    }
+
+    button {
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 1.2rem 2rem;
+      text-align: center;
+      font-size: 1.6rem;
+      font-weight: 600;
+      cursor: pointer;
+      border-radius: 0.4rem;
+      transition: background-color 0.3s ease, transform 0.1s ease;
+      min-width: 15rem;
+    }
+
+    button:hover {
+      background-color: var(--secondary-color);
+    }
+
+    button:active {
+      transform: scale(0.98);
+    }
+
+    button.copy-btn {
+      background-color: var(--success-color);
+    }
+
+    button.clear-btn {
+      background-color: #95a5a6;
+    }
+
+    #fieldsTable {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    #fieldsTable th, #fieldsTable td {
+      padding: 1rem;
+      text-align: left;
+      border: 1px solid var(--border-color);
+    }
+
+    #fieldsTable th {
+      background-color: #f5f5f5;
+      font-weight: 600;
+      color: var(--primary-color);
+    }
+
+    #fieldsTable select, #fieldsTable input {
+      width: 100%;
+      padding: 0.8rem;
+      border-radius: 0.4rem;
+      border: 1px solid var(--border-color);
+      font-size: 1.4rem;
+    }
+
+    .field-name {
+      font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+      font-weight: 600;
+    }
+
+    .message {
+      margin-top: 1rem;
+      padding: 1rem;
+      border-radius: 0.4rem;
+      font-size: 1.4rem;
+    }
+
+    .success {
+      background-color: rgba(46, 204, 113, 0.1);
+      color: var(--success-color);
+      border: 1px solid var(--success-color);
+    }
+
+    .error {
+      background-color: rgba(231, 76, 60, 0.1);
+      color: var(--error-color);
+      border: 1px solid var(--error-color);
+    }
+
+    .validation-type-group {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .validation-type-group input[type="checkbox"] {
+      width: auto;
+    }
+
+    .header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .package-input {
+      width: 100%;
+      padding: 0.8rem;
+      border-radius: 0.4rem;
+      border: 1px solid var(--border-color);
+      font-size: 1.4rem;
+      margin-bottom: 1rem;
+    }
+
+    @media (max-width: 1024px) {
+      .input-output-container {
+        flex-direction: column;
+      }
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 1rem;
+      }
+
+      .container {
+        padding: 1.5rem;
+      }
+
+      h1 {
+        font-size: 2.4rem;
+      }
+
+      button {
+        padding: 1rem 1.5rem;
+        font-size: 1.4rem;
+        min-width: 12rem;
+      }
+
+      #fieldsTable th, #fieldsTable td {
+        padding: 0.8rem;
+        font-size: 1.4rem;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="header-row">
+    <h1>Java Validator Generator</h1>
+  </div>
+
+  <div>
+    <label for="packageName">Package Name:</label>
+    <input type="text" id="packageName" class="package-input" placeholder="e.g., com.nec.bnehops.api.frr09501.frr09501api001.service">
+  </div>
+
+  <div>
+    <label for="className">Class Name (without 'Validator' suffix):</label>
+    <input type="text" id="className" class="package-input" placeholder="e.g., Frr09501api001">
+  </div>
+
+  <div class="input-output-container">
+    <div class="input-group">
+      <label for="resourceCode">Paste your Resource code:</label>
+      <textarea id="resourceCode" placeholder="Paste your Resource class content here..."></textarea>
+      <div class="button-group">
+        <button onclick="extractFields()">Extract Fields</button>
+        <button onclick="clearResource()" class="clear-btn">Clear</button>
+      </div>
+    </div>
+
+    <div class="output-group">
+      <label for="validatorCode">Generated Validator Code:</label>
+      <textarea id="validatorCode" placeholder="Validator code will appear here..." readonly></textarea>
+      <div class="button-group">
+        <button onclick="generateValidator()">Generate Validator</button>
+        <button onclick="copyToClipboard()" class="copy-btn">Copy to Clipboard</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="fieldsContainer" style="display: none;">
+    <label>Configure validation for each field:</label>
+    <table id="fieldsTable">
+      <thead>
+      <tr>
+        <th>Field Name</th>
+        <th>Validate?</th>
+        <th>Validation Type</th>
+        <th>Error Message ID</th>
+        <th>Date Format Pattern</th>
+      </tr>
+      </thead>
+      <tbody id="fieldsTableBody">
+      <!-- Will be populated by JavaScript -->
+      </tbody>
+    </table>
+  </div>
+
+  <div id="message" class="message" style="display: none;"></div>
+</div>
+
+<script>
+  // Store extracted fields
+  let extractedFields = [];
+
+  // Common validation types
+  const validationTypes = [
+    { value: "required", label: "Required" },
+    { value: "dateFormat", label: "Date Format" },
+    { value: "numeric", label: "Numeric" },
+    { value: "length", label: "Max Length" },
+    { value: "regex", label: "Regex" },
+    { value: "custom", label: "Custom" }
+  ];
+
+  // Common error message IDs
+  const errorMessageIds = [
+    { value: "COMMON-API-MS-100-F", label: "Required (COMMON-API-MS-100-F)" },
+    { value: "COMMON-API-MS-137-F", label: "Date Format (COMMON-API-MS-137-F)" },
+    { value: "COMMON-API-MS-133-F", label: "Numeric (COMMON-API-MS-133-F)" },
+    { value: "COMMON-API-MS-104-F", label: "Max Length (COMMON-API-MS-104-F)" },
+    { value: "COMMON-API-MS-105-F", label: "Regex (COMMON-API-MS-105-F)" },
+    { value: "CUSTOM", label: "Custom" }
+  ];
+
+  // Date format patterns
+  const dateFormatPatterns = [
+    { value: "yyyy/MM/dd", label: "yyyy/MM/dd" },
+    { value: "yyyy-MM-dd", label: "yyyy-MM-dd" },
+    { value: "yyyyMMdd", label: "yyyyMMdd" },
+    { value: "yyyy/MM/dd HH:mm:ss", label: "yyyy/MM/dd HH:mm:ss" },
+    { value: "HH:mm:ss", label: "HH:mm:ss" },
+    { value: "custom", label: "Custom" }
+  ];
+
+  function showMessage(message, type) {
+    const messageElement = document.getElementById('message');
+    messageElement.textContent = message;
+    messageElement.className = `message ${type}`;
+    messageElement.style.display = 'block';
+
+    // Auto hide after 5 seconds
+    setTimeout(() => {
+      messageElement.style.display = 'none';
+    }, 5000);
+  }
+
+  function extractFields() {
+    const resourceCode = document.getElementById('resourceCode').value;
+    const fieldsContainer = document.getElementById('fieldsContainer');
+    const fieldsTableBody = document.getElementById('fieldsTableBody');
+
+    // Reset fields
+    extractedFields = [];
+    fieldsTableBody.innerHTML = '';
+
+    if (!resourceCode) {
+      showMessage('Please paste your Resource class code first.', 'error');
+      return;
+    }
+
+    try {
+      // Find all inner static classes that have "Index" in their name
+      const indexClassRegex = /public\s+static\s+class\s+(\w+Index)\s*\{([^}]*)\}/g;
+      let indexClassMatch;
+
+      while ((indexClassMatch = indexClassRegex.exec(resourceCode)) !== null) {
+        const className = indexClassMatch[1];
+        const classContent = indexClassMatch[2];
+
+        // Find all field definitions within the class
+        const fieldRegex = /public\s+static\s+final\s+int\s+(\w+)\s*=\s*\d+;\s*\/\*\*\s*(.*?)\s*\*\//g;
+        let fieldMatch;
+
+        while ((fieldMatch = fieldRegex.exec(classContent)) !== null) {
+          const fieldName = fieldMatch[1];
+          let description = fieldMatch[2].trim();
+
+          // If no description is found in the comment, try another pattern
+          if (!description) {
+            const altDescriptionRegex = new RegExp(`/\\*\\*\\s*(.*?)\\s*\\*/\\s*public\\s+static\\s+final\\s+int\\s+${fieldName}\\s*=`, 'g');
+            const altMatch = altDescriptionRegex.exec(classContent);
+            if (altMatch) {
+              description = altMatch[1].trim();
+            }
+          }
+
+          extractedFields.push({
+            name: fieldName,
+            description: description || fieldName,
+            className: className,
+            validate: false,
+            validationType: "required",
+            errorMessageId: "COMMON-API-MS-100-F",
+            dateFormatPattern: "yyyy/MM/dd"
+          });
+        }
+      }
+
+      // If no Index classes found, try to extract fields directly
+      if (extractedFields.length === 0) {
+        const directFieldRegex = /public\s+static\s+final\s+int\s+(\w+)\s*=\s*\d+;\s*\/\*\*\s*(.*?)\s*\*\//g;
+        let fieldMatch;
+
+        while ((fieldMatch = directFieldRegex.exec(resourceCode)) !== null) {
+          const fieldName = fieldMatch[1];
+          const description = fieldMatch[2].trim();
+
+          extractedFields.push({
+            name: fieldName,
+            description: description || fieldName,
+            className: "Default",
+            validate: false,
+            validationType: "required",
+            errorMessageId: "COMMON-API-MS-100-F",
+            dateFormatPattern: "yyyy/MM/dd"
+          });
+        }
+      }
+
+      if (extractedFields.length === 0) {
+        showMessage('No fields found in the resource code. Please check the format.', 'error');
+        return;
+      }
+
+      // Populate the table
+      extractedFields.forEach((field, index) => {
+        const row = document.createElement('tr');
+
+        // Field name and description
+        const nameCell = document.createElement('td');
+        nameCell.innerHTML = `<span class="field-name">${field.name}</span><br><small>${field.description}</small>`;
+        row.appendChild(nameCell);
+
+        // Validate checkbox
+        const validateCell = document.createElement('td');
+        const validateCheckbox = document.createElement('input');
+        validateCheckbox.type = 'checkbox';
+        validateCheckbox.id = `validate-${index}`;
+        validateCheckbox.addEventListener('change', function() {
+          extractedFields[index].validate = this.checked;
+          // Enable/disable other inputs based on checkbox
+          document.getElementById(`validation-type-${index}`).disabled = !this.checked;
+          document.getElementById(`error-message-${index}`).disabled = !this.checked;
+          document.getElementById(`date-format-${index}`).disabled = !this.checked || extractedFields[index].validationType !== 'dateFormat';
+        });
+        validateCell.appendChild(validateCheckbox);
+        row.appendChild(validateCell);
+
+        // Validation type
+        const typeCell = document.createElement('td');
+        const typeSelect = document.createElement('select');
+        typeSelect.id = `validation-type-${index}`;
+        typeSelect.disabled = true;
+
+        validationTypes.forEach(type => {
+          const option = document.createElement('option');
+          option.value = type.value;
+          option.textContent = type.label;
+          typeSelect.appendChild(option);
+        });
+
+        typeSelect.addEventListener('change', function() {
+          extractedFields[index].validationType = this.value;
+          // Enable date format pattern only for date validation
+          document.getElementById(`date-format-${index}`).disabled = this.value !== 'dateFormat';
+
+          // Update error message ID based on validation type
+          const errorMsgSelect = document.getElementById(`error-message-${index}`);
+          if (this.value === 'required') {
+            errorMsgSelect.value = 'COMMON-API-MS-100-F';
+          } else if (this.value === 'dateFormat') {
+            errorMsgSelect.value = 'COMMON-API-MS-137-F';
+          } else if (this.value === 'numeric') {
+            errorMsgSelect.value = 'COMMON-API-MS-133-F';
+          } else if (this.value === 'length') {
+            errorMsgSelect.value = 'COMMON-API-MS-104-F';
+          } else if (this.value === 'regex') {
+            errorMsgSelect.value = 'COMMON-API-MS-105-F';
+          }
+          extractedFields[index].errorMessageId = errorMsgSelect.value;
+        });
+
+        typeCell.appendChild(typeSelect);
+        row.appendChild(typeCell);
+
+        // Error message ID
+        const errorCell = document.createElement('td');
+        const errorSelect = document.createElement('select');
+        errorSelect.id = `error-message-${index}`;
+        errorSelect.disabled = true;
+
+        errorMessageIds.forEach(msg => {
+          const option = document.createElement('option');
+          option.value = msg.value;
+          option.textContent = msg.label;
+          errorSelect.appendChild(option);
+        });
+
+        errorSelect.addEventListener('change', function() {
+          extractedFields[index].errorMessageId = this.value;
+        });
+
+        errorCell.appendChild(errorSelect);
+        row.appendChild(errorCell);
+
+        // Date format pattern
+        const patternCell = document.createElement('td');
+        const patternSelect = document.createElement('select');
+        patternSelect.id = `date-format-${index}`;
+        patternSelect.disabled = true;
+
+        dateFormatPatterns.forEach(pattern => {
+          const option = document.createElement('option');
+          option.value = pattern.value;
+          option.textContent = pattern.label;
+          patternSelect.appendChild(option);
+        });
+
+        patternSelect.addEventListener('change', function() {
+          extractedFields[index].dateFormatPattern = this.value;
+        });
+
+        patternCell.appendChild(patternSelect);
+        row.appendChild(patternCell);
+
+        fieldsTableBody.appendChild(row);
+      });
+
+      fieldsContainer.style.display = 'block';
+      showMessage(`Successfully extracted ${extractedFields.length} fields!`, 'success');
+    } catch (error) {
+      console.error(error);
+      showMessage('Error extracting fields. Please check console for details.', 'error');
+    }
+  }
+
+  function generateValidator() {
+    const packageName = document.getElementById('packageName').value;
+    const className = document.getElementById('className').value;
+    const validatorCodeElement = document.getElementById('validatorCode');
+
+    if (!packageName) {
+      showMessage('Please enter a package name.', 'error');
+      return;
+    }
+
+    if (!className) {
+      showMessage('Please enter a class name.', 'error');
+      return;
+    }
+
+    if (extractedFields.length === 0) {
+      showMessage('Please extract fields first.', 'error');
+      return;
+    }
+
+    // Filter fields that need validation
+    const fieldsToValidate = extractedFields.filter(field => field.validate);
+
+    if (fieldsToValidate.length === 0) {
+      showMessage('Please select at least one field to validate.', 'error');
+      return;
+    }
+
+    // Group fields by class for better organization
+    const fieldsByClass = {};
+    fieldsToValidate.forEach(field => {
+      if (!fieldsByClass[field.className]) {
+        fieldsByClass[field.className] = [];
+      }
+      fieldsByClass[field.className].push(field);
+    });
+
+    // Start building the validator code
+    let code = `/*
+ * THIS PROGRAM IS GENERATED BY VALIDATOR GENERATOR TOOL.
+ *
+ * $Date: ${new Date().toISOString()} $
+ */
+package ${packageName};
+
+import ${packageName}.fixed.*;
+import com.nec.bnehops.api.fw.fwl90100.fwl90100_sh.XClsFncFW_SH;
+import com.nec.bnehops.api.kiban.util.validator.CommonValidatorUtils;
+import com.nec.jp.sac.util.stringcheck.StringCheck;
+
+/**
+ * ${className}Validator
+ */
+public class ${className}Validator extends Base${className}Validator {`;
+
+    // Add constants for field names
+    code += '\n\t/** Field name constants */';
+    fieldsToValidate.forEach(field => {
+      code += `\n\tprivate static final String ${field.name}_STRING = "${field.name.toLowerCase()}";`;
+    });
+
+    // Add constants for error message IDs
+    code += '\n\n\t/** Error message IDs */';
+    const uniqueErrorMsgs = [...new Set(fieldsToValidate.map(field => field.errorMessageId))];
+    uniqueErrorMsgs.forEach(msgId => {
+      const errorType = msgId.includes('100') ? 'REQUIRED' :
+              msgId.includes('137') ? 'DATE_FORMAT' :
+                      msgId.includes('133') ? 'NUMERIC' :
+                              msgId.includes('104') ? 'MAX_LENGTH' :
+                                      msgId.includes('105') ? 'REGEX' : 'CUSTOM';
+      code += `\n\tprivate static final String CHECK_${errorType}_MSG_ID = "${msgId}";`;
+    });
+
+    // Add constants for date formats if needed
+    const hasDateValidation = fieldsToValidate.some(field => field.validationType === 'dateFormat');
+    if (hasDateValidation) {
+      code += '\n\n\t/** Date format patterns */';
+      const uniquePatterns = [...new Set(fieldsToValidate
+              .filter(field => field.validationType === 'dateFormat')
+              .map(field => field.dateFormatPattern))];
+
+      uniquePatterns.forEach(pattern => {
+        const patternName = pattern.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase();
+        code += `\n\tprivate static final String DATE_FORMAT_${patternName}_PATTERN = "${pattern}";`;
+      });
+    }
+
+    // Add common utility objects
+    code += `\n
+\t/** Common utilities */
+\tprivate XClsFncFW_SH xClsFncFW = new XClsFncFW_SH();
+
+\t/**
+\t * Validator utility class
+\t */
+\tprivate CommonValidatorUtils validator = new CommonValidatorUtils();
+
+\t/**
+\t * constructor
+\t */
+\tpublic ${className}Validator() {
+\t}`;
+
+    // Add validation methods
+    code += `\n
+\t/**
+\t * addCheckPost
+\t *
+\t * @param inputData ${className}PostInputData
+\t */
+\t@Override
+\tpublic void addCheckPost(${className}PostInputData inputData) {`;
+
+    // Process each class of fields
+    Object.entries(fieldsByClass).forEach(([className, fields]) => {
+      // Add class-specific data retrieval
+      const varName = className.replace('Index', '').toLowerCase();
+      code += `\n\t\tvar ${varName} = inputData.get${className.replace('Index', '')}();`;
+    });
+
+    code += '\n';
+
+    // Process each field validation
+    fieldsToValidate.forEach(field => {
+      const varName = field.className.replace('Index', '').toLowerCase();
+      const fieldConstant = `${className}Resource.${field.className}.${field.name}`;
+
+      // Get the field value
+      code += `\n\t\t// ${field.description}
+\t\tString p${field.name} = this.xClsFncFW.fncCTypeStr(${varName}.get(${fieldConstant}));`;
+
+      // Perform validation based on type
+      if (field.validationType === 'required') {
+        code += `
+\t\tif (!this.validator.checkRequired(p${field.name})) {
+\t\t\tthis.addCheckError(CHECK_REQUIRED_MSG_ID, ${field.name}_STRING);
+\t\t}`;
+      } else if (field.validationType === 'dateFormat') {
+        const patternName = field.dateFormatPattern.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase();
+        code += `
+\t\tif (this.validator.checkRequired(p${field.name})) {
+\t\t\tif (!this.validator.checkDateFormat(p${field.name}, DATE_FORMAT_${patternName}_PATTERN, null,
+\t\t\t\t\tStringCheck.ZERO_SUPPRESS_OFF)) {
+\t\t\t\tthis.addCheckError(CHECK_DATE_FORMAT_MSG_ID, ${field.name}_STRING);
+\t\t\t}
+\t\t} else {
+\t\t\tthis.addCheckError(CHECK_REQUIRED_MSG_ID, ${field.name}_STRING);
+\t\t}`;
+      } else if (field.validationType === 'numeric') {
+        code += `
+\t\tif (!this.validator.checkNumeric(p${field.name})) {
+\t\t\tthis.addCheckError(CHECK_NUMERIC_MSG_ID, ${field.name}_STRING);
+\t\t}`;
+      } else if (field.validationType === 'length') {
+        code += `
+\t\tif (!this.validator.checkMaxLength(p${field.name}, 50)) { // Adjust max length as needed
+\t\t\tthis.addCheckError(CHECK_MAX_LENGTH_MSG_ID, ${field.name}_STRING, 50);
+\t\t}`;
+      } else if (field.validationType === 'regex') {
+        code += `
+\t\tif (!this.validator.checkRegex(p${field.name}, "^[A-Za-z0-9]+$")) { // Adjust regex as needed
+\t\t\tthis.addCheckError(CHECK_REGEX_MSG_ID, ${field.name}_STRING);
+\t\t}`;
+      }
+    });
+
+    // Add result check
+    code += `\n\n\t\t// Check result
+\t\tif (addCheckMap.size() != 0) {
+\t\t\tresult = false;
+\t\t}
+\t}
+
+\t/**
+\t * addCheckError
+\t *
+\t * @param strMsgId Message ID
+\t * @param params Message parameters
+\t */
+\tprivate void addCheckError(String strMsgId, Object... params) {
+\t\t// Get error message
+\t\tXClsFncFW_SH xcFnc = new XClsFncFW_SH();
+\t\tString message = xcFnc.fncGetCmMsg(strMsgId, null, params);
+\t\t
+\t\t// If error already exists, append new message
+\t\tif (addCheckMap.containsKey(strMsgId)) {
+\t\t\tmessage = addCheckMap.get(strMsgId) + "," + message;
+\t\t}
+\t\t
+\t\taddCheckMap.put(strMsgId, message);
+\t}
+}`;
+
+    validatorCodeElement.value = code;
+    showMessage('Validator code generated successfully!', 'success');
+  }
+
+  function copyToClipboard() {
+    const validatorCode = document.getElementById('validatorCode');
+
+    if (!validatorCode.value) {
+      showMessage('No code to copy. Generate the validator first.', 'error');
+      return;
+    }
+
+    validatorCode.select();
+    document.execCommand('copy');
+
+    showMessage('Code copied to clipboard!', 'success');
+  }
+
+  function clearResource() {
+    document.getElementById('resourceCode').value = '';
+    document.getElementById('fieldsContainer').style.display = 'none';
+    document.getElementById('fieldsTableBody').innerHTML = '';
+    extractedFields = [];
+  }
+
+  // Load sample data for demonstration
+  window.onload = function() {
+    // Set sample package and class name
+    document.getElementById('packageName').value = 'com.nec.bnehops.api.frr09501.frr09501api001.service';
+    document.getElementById('className').value = 'Frr09501api001';
+
+    // Auto-save to localStorage
+    ['resourceCode', 'packageName', 'className'].forEach(id => {
+      const element = document.getElementById(id);
+      // Load saved value
+      if (localStorage.getItem(id)) {
+        element.value = localStorage.getItem(id);
+      }
+
+      // Save on input
+      element.addEventListener('input', function() {
+        localStorage.setItem(id, this.value);
+      });
+    });
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+      // Ctrl+Enter to extract fields
+      if (e.ctrlKey && e.key === 'Enter') {
+        if (extractedFields.length === 0) {
+          extractFields();
+        } else {
+          generateValidator();
+        }
+      }
+
+      // Ctrl+C to copy code
+      if (e.ctrlKey && e.key === 'c' && document.activeElement === document.getElementById('validatorCode')) {
+        copyToClipboard();
+      }
+    });
+  };
+</script>
+</body>
+</html>
